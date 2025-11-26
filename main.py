@@ -46,6 +46,7 @@ def main():
     BoardShim.enable_dev_board_logger()
     params = BrainFlowInputParams()
     params.serial_port = '/dev/ttyACM0'  # Change to your actual serial port, e.g., '/dev/ttyUSB0' on Linux/Mac, or check device manager on Windows
+    params.timeout = 0
     board = BoardShim(BOARD_ID, params)
 
     try:
