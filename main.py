@@ -52,6 +52,7 @@ def main():
     try:
         board.prepare_session()
         board.start_stream()
+        board.config_board("~4")
         print("Stream started successfully.")
     except BrainFlowError as e:
         print(f"Error starting stream: {e}")
