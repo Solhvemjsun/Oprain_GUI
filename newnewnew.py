@@ -38,9 +38,9 @@ BANDS = [
     ("Delta",  0.5, 4),
     ("Theta",  4,   8),
     ("Alpha",  8,  13),
-    ("Low β", 13,  20),
-    ("High β",20,  30),
-    ("Gamma", 30,  50),
+    ("Lowβ", 13,  20),
+    ("Highβ",20,  30),
+    ("Gamma", 30,  100),
 ]
 NUM_BANDS = len(BANDS)
 
@@ -62,7 +62,7 @@ def main():
     try:
         board.prepare_session()
         board.start_stream()
-        board.config_board("~4")
+        board.config_board("~5")
         print("Stream started successfully.")
     except BrainFlowError as e:
         print(f"Error starting stream: {e}")
@@ -96,7 +96,7 @@ def main():
             if event.type == QUIT:
                 running = False
 
-        # 数据采集与处理（不变）
+        # 数据采集与处理
         data = board.get_current_board_data(SAMPLE_RATE)
         num_samples = data.shape[1]
         new_sample = None
@@ -172,7 +172,7 @@ def main():
         # 左上：时间域波形
         for ch in range(NUM_CHANNELS):
             color = CHANNEL_COLORS[ch]
-            y_offset = ch * CHANNEL_HEIGHT + 60
+            y_offset = ch * CHANNEL_HEIGHT + 100
             scale_factor = CHANNEL_HEIGHT / 2.2 / TIME_DOMAIN_SCALE_UV
             scaled = (time_data[ch] * scale_factor) + (CHANNEL_HEIGHT / 2 + y_offset)
             scaled = np.clip(scaled, y_offset, y_offset + CHANNEL_HEIGHT - 1)
@@ -180,38 +180,38 @@ def main():
             pygame.draw.line(screen, (40, 40, 40), (40, y_offset + CHANNEL_HEIGHT//2), (LEFT_WIDTH - 40, y_offset + CHANNEL_HEIGHT//2), 1)
 
             for i in range(1, WINDOW_SIZE):
-                x1 = 40 + (i-1) * ((LEFT_WIDTH - 80) / WINDOW_SIZE)
-                x2 = 40 + i * ((LEFT_WIDTH - 80) / WINDOW_SIZE)
+                x1 = 100 + (i-1) * ((LEFT_WIDTH - 80) / WINDOW_SIZE)
+                x2 = 100 + i * ((LEFT_WIDTH - 80) / WINDOW_SIZE)
                 pygame.draw.line(screen, color, (x1, scaled[i-1]), (x2, scaled[i]), 3)
 
-        # 右上：各通道 Band Power —— 关键修改：频段名移到下方
-        bar_width = 40
+        # 右上：各通道 Band Power
+        bar_width = 100
         bar_spacing = 20
         total_bar_w = NUM_BANDS * (bar_width + bar_spacing) - bar_spacing
-        bar_center_x = LEFT_WIDTH + (RIGHT_WIDTH - total_bar_w) // 2
+        bar_center_x = LEFT_WIDTH + (RIGHT_WIDTH - total_bar_w) // 2 + 100
 
         global_max = np.max(band_powers) if np.max(band_powers) > 0 else 1
 
         for ch in range(NUM_CHANNELS):
-            y_base = 100 + ch * CHANNEL_HEIGHT  # 柱子区域起始Y（留出上方空间）
+            y_base = ch * CHANNEL_HEIGHT + 80 # 柱子区域起始Y（留出上方空间）
             color = CHANNEL_COLORS[ch]
-            ch_label = font.render(f"Ch{ch+1}", True, color)
-            screen.blit(ch_label, (LEFT_WIDTH + 80, y_base + CHANNEL_HEIGHT // 2 - 10))
+            ch_label = small_font.render(f"Ch{ch+1}", True, color)
+            screen.blit(ch_label, (LEFT_WIDTH + 90, y_base + CHANNEL_HEIGHT // 2 + 5))
 
             for b in range(NUM_BANDS):
                 power = band_powers[ch, b]
                 height = max((power / global_max) * (CHANNEL_HEIGHT - 40), 4)
-                x = bar_center_x + b * (bar_width + bar_spacing)
+                x = bar_center_x + b * (bar_width + bar_spacing) - 200
 
                 # 绘制柱子（从底部向上生长）
                 pygame.draw.rect(screen, color,
                                  (x, y_base + (CHANNEL_HEIGHT - height), bar_width, height))
 
-        # 频段名称放在所有通道的最下方（只显示一次）
-        band_name_y = 100 + NUM_CHANNELS * CHANNEL_HEIGHT - 40
+        # 频段名称放在所有通道的最下方（只显示一次
+        band_name_y = 100 + NUM_CHANNELS * CHANNEL_HEIGHT + 20
         for b, (name, _, _) in enumerate(BANDS):
-            x = bar_center_x + b * (bar_width + bar_spacing)
-            label = large_font.render(name, True, (230, 230, 230))
+            x = bar_center_x + b * (bar_width + bar_spacing) - 200
+            label = small_font.render(name, True, (230, 230, 230))
             screen.blit(label, (x + bar_width // 2 - label.get_width() // 2, band_name_y))
 
         # 左下：FFT 频谱
@@ -236,7 +236,7 @@ def main():
             pygame.draw.line(screen, (80, 80, 80), (x, plot_bottom), (x, plot_bottom + 20), 2)
             label = font.render(str(f_mark), True, (200, 200, 200))
             screen.blit(label, (x - 15, plot_bottom + 30))
-        screen.blit(font.render("Hz", True, (200, 200, 200)), (LEFT_WIDTH - 100, plot_bottom + 30))
+        screen.blit(font.render("Hz", True, (200, 200, 200)), (LEFT_WIDTH , plot_bottom + 30))
 
         # 右下：Total Band Power（保持不变）
         total_bar_width = 100
